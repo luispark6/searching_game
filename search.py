@@ -63,36 +63,27 @@ class Grid:
 
     def neighbors(self, acc):
         neigh_list=[]
-    
-
-
         if acc % 20 == 0 and acc/20<1: #if indice is top_left
             neigh_list.append(acc+1) #neighbor is right indice
             neigh_list.append(acc+20) #neighbor is bottom indice
             self.neighbors_list[acc] = neigh_list
-
         elif acc % 20 == 0 and acc/380>=1: #if indice is bottom_left
             neigh_list.append(acc+1) #neighbor is right indice
             neigh_list.append(acc-20) #neight is top indice
             self.neighbors_list[acc] = neigh_list
-
-
         elif acc % 20 == 19 and acc/20<1: #if indice is top_right
             neigh_list.append(acc-1) #neighbor is left indice
             neigh_list.append(acc+20) #neighbor is bottom indice
             self.neighbors_list[acc] = neigh_list
-
         elif acc % 20 == 19 and acc/380>=1: #if indice is bottom_right
             neigh_list.append(acc-1) #neighbor is left indice
             neigh_list.append(acc-20) #neighbor is top indice
             self.neighbors_list[acc] = neigh_list
-
         elif acc % 20 == 19: #if indice is right edge
             neigh_list.append(acc-1)
             neigh_list.append(acc-20)
             neigh_list.append(acc+20)
             self.neighbors_list[acc] = neigh_list
-        
         elif acc/380>=1: #if indice is bottom edge
             neigh_list.append(acc-1)
             neigh_list.append(acc-20)
@@ -115,22 +106,44 @@ class Grid:
             neigh_list.append(acc-20)
             self.neighbors_list[acc] = neigh_list
 
+    #def build_wall(self):
+
+    
+
 
 
 
 
 
 def main():
+    button_ind=0  #this tells us if mouse button is up or down for each event
+    FPS_CLOCK = pygame.time.Clock()
     grid = Grid()   
     grid.setup_blocks()   #creates a grid 600x600
-    print(grid.neighbors_list)
     running =True    
     while running:    #checks each event and see if it should quit
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
                 if (event.key == pygame.K_ESCAPE) or (event.type == pygame.QUIT):
                     running = False
+            
+            if event.type == pygame.MOUSEBUTTONUP: #if the mouse button has been release, then set button_ind =0
+                button_ind=0
+            if event.type == pygame.MOUSEBUTTONDOWN: #if button pushed down, then set button_ind=1
+                button_ind=1
+                position = pygame.mouse.get_pos() #we want the coords of where button was pushed down to display wall
+                #you should call build wall here
+                print(position)
+            elif event.type == pygame.MOUSEMOTION and button_ind==1: #if mouse is in motion and button ind==1, which
+                                                                     #means button is still down, then find the position
+                                                                     #of cursor
+                position = pygame.mouse.get_pos()
+                #you should call build wall here
+                print(position)
+    
+        FPS_CLOCK.tick(40)
         
+    
         pos = pygame.mouse.get_pos() #finds the coords of the current cursor postion
         grid.highlight_box(pos) #calls the method according to current position, highlights the current box
         
