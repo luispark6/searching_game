@@ -3,6 +3,7 @@ from os import environ
 from re import L
 environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
 import pygame
+import time
 
 
 class Grid:
@@ -12,9 +13,6 @@ class Grid:
     gray = [41,41,41]
     line_color= [229,229,229]
     neighbors_list = {}
-
-    
-    
 
     def __init__(self):
         pygame.init()  #intializes pygame
@@ -106,16 +104,75 @@ class Grid:
             neigh_list.append(acc-20)
             self.neighbors_list[acc] = neigh_list
 
-    #def build_wall(self):
+    def build_wall(self, pos):
+        color = [139,119,101] 
+        x_indice = pos[0]//30 #to find the left coords of current position of current block your in
+        y_indice = pos[1]//30 #to find the top coords of current position of current block your in
+        pygame.draw.rect(self.screen, color, pygame.Rect(x_indice*30, y_indice*30, 30, 30)) # draw rectangle of current block
+        pygame.display.flip() #this displays the highlighted block
+        indice = 20*y_indice + x_indice
+        
+        for i in self.neighbors_list[indice]:
+            if indice in self.neighbors_list[i]:
+                self.neighbors_list[i].remove(indice)
+            
+        return indice
 
-    
 
+    def bfs(self, graph, start, goal):
+        # keep track of explored nodes
+        explored = []
+        # keep track of all the paths to be checked
+        queue = [[start]]
+ 
+        # return path if start is goal
+        if start == goal:
+            return "That was easy! Start = goal"
+ 
+        # keeps looping until all possible paths have been checked
+        while queue:
+            # pop the first path from the queue
+            path = queue.pop(0)
+            # get the last node from the path
+            node = path[-1]
+            if node not in explored:
+                neighbours = graph[node]
+                # go through all neighbour nodes, construct a new path and
+                # push it into the queue
+                for neighbour in neighbours:
+                    new_path = list(path)
+                    new_path.append(neighbour)
+                    queue.append(new_path)
+                    # return path if neighbour is goal
+                    if neighbour == goal:
+                        return new_path
+ 
+                # mark node as explored
+                explored.append(node)
 
-
-
+    def draw_path(self, shortest_path):
+        path = [187,255,255]
+        
+        for i in range(len(shortest_path)):
+            y_indice = shortest_path[i]//20
+            x_indice = shortest_path[i]-(20*y_indice)
+            x_coord = x_indice*30
+            y_coord= y_indice*30
+            pygame.draw.rect(self.screen, path, pygame.Rect(x_coord, y_coord, 30, 30)) 
+            pygame.display.update()
+            time.sleep(.05)
+            
+        #pygame.display.flip()
 
 
 def main():
+    start_end= [] #This tells us the start and end indices
+    end= [255, 0, 0]
+    send_ind=0   #this tells me when I should reset the start and end blocks
+    Gindice=0  #this tells me the indice of the start block
+    Eindice = 0  #this tells me the idnice of the end block
+    green = [0,255, 0]
+    wall_indice = {}  #this tells me which block indices are a wall
     button_ind=0  #this tells us if mouse button is up or down for each event
     FPS_CLOCK = pygame.time.Clock()
     grid = Grid()   
@@ -127,52 +184,100 @@ def main():
                 if (event.key == pygame.K_ESCAPE) or (event.type == pygame.QUIT):
                     running = False
             
-            if event.type == pygame.MOUSEBUTTONUP: #if the mouse button has been release, then set button_ind =0
+            if event.type == pygame.MOUSEBUTTONUP : #if the mouse button has been release, then set button_ind =0
                 button_ind=0
-            if event.type == pygame.MOUSEBUTTONDOWN: #if button pushed down, then set button_ind=1
+
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button==1: #if button pushed down, then set button_ind=1
+               
                 button_ind=1
                 position = pygame.mouse.get_pos() #we want the coords of where button was pushed down to display wall
-                #you should call build wall here
-                print(position)
+                indice = grid.build_wall(position)
+                wall_indice[indice]=1
+
+                
             elif event.type == pygame.MOUSEMOTION and button_ind==1: #if mouse is in motion and button ind==1, which
                                                                      #means button is still down, then find the position
                                                                      #of cursor
                 position = pygame.mouse.get_pos()
-                #you should call build wall here
-                print(position)
-    
-        FPS_CLOCK.tick(40)
-        
-    
-        pos = pygame.mouse.get_pos() #finds the coords of the current cursor postion
-        grid.highlight_box(pos) #calls the method according to current position, highlights the current box
-        
+                indice = grid.build_wall(position)
+                wall_indice[indice]=1
 
+            
 
+            #this means that if we click right click for the third time, reset the start/end blocks
+            if send_ind==2 and event.type == pygame.MOUSEBUTTONDOWN and event.button==3:
+                new_pos= pygame.mouse.get_pos()#find the current position of mouse
+                newx_indice = new_pos[0]//30 #to find the left coords of current position of current block your in
+                newy_indice = new_pos[1]//30 #to find the top coords of current position of current block your in
+                new_indice = 20*newy_indice + newx_indice #calculates the indice you are currently in
+                if new_indice not in wall_indice: #if we right click not on a wall block, procede
+                    send_ind= 0
+                    start_end.remove(Gindice)
+                    start_end.remove(Eindice)
+                    pygame.draw.rect(grid.screen, grid.gray, pygame.Rect(Gx_indice*30, Gy_indice*30, 30, 30)) 
+                    pygame.draw.line(grid.screen , grid.line_color, (Gx_indice*30, Gy_indice*30), (Gx_indice*30+ 30, Gy_indice*30) )
+                    pygame.draw.line(grid.screen , grid.line_color, (Gx_indice*30, Gy_indice*30), (Gx_indice*30 , Gy_indice*30+30) )
+                    pygame.draw.line(grid.screen , grid.line_color, (Gx_indice*30 +30, Gy_indice*30+30), (Gx_indice*30+30, Gy_indice*30-30))
+                    pygame.draw.line(grid.screen , grid.line_color, (Gx_indice*30 +30, Gy_indice*30+30), (Gx_indice*30 - 30 , Gy_indice*30+30))
+                    Gindice = 0
+                    pygame.draw.rect(grid.screen, grid.gray, pygame.Rect(Ex_indice*30, Ey_indice*30, 30, 30)) 
+                    pygame.draw.line(grid.screen , grid.line_color, (Ex_indice*30, Ey_indice*30), (Ex_indice*30+ 30, Ey_indice*30) )
+                    pygame.draw.line(grid.screen , grid.line_color, (Ex_indice*30, Ey_indice*30), (Ex_indice*30 , Ey_indice*30+30) )
+                    pygame.draw.line(grid.screen , grid.line_color, (Ex_indice*30 +30, Ey_indice*30+30), (Ex_indice*30+30, Ey_indice*30-30))
+                    pygame.draw.line(grid.screen , grid.line_color, (Ex_indice*30 +30, Ey_indice*30+30), (Ex_indice*30 - 30 , Ey_indice*30+30))
+                    Eindice=0
+            #first time we right click, if what we right click is not a wall, then set the start block with a green block
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button==3 and send_ind==0:
+                posG = pygame.mouse.get_pos()
+                Gx_indice = posG[0]//30
+                Gy_indice = posG[1]//30
+                Gindice = 20*Gy_indice+Gx_indice
+                if Gindice not in wall_indice:
+                    start_end.append(Gindice) #appends the green indice
+                    send_ind=1
+                    pygame.draw.rect(grid.screen, green, pygame.Rect(Gx_indice*30, Gy_indice*30, 30, 30)) # draw rectangle of current block
+                    pygame.display.flip()
+            #for the second time we click, this sets the end block to where we clikced 
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button==3 and send_ind==1:
+                posE = pygame.mouse.get_pos()
+                Ex_indice = posE[0]//30
+                Ey_indice = posE[1]//30
+                Eindice = 20*Ey_indice+Ex_indice
+                if Eindice not in wall_indice:
+                    start_end.append(Eindice) #appends end indice
+                    send_ind=2
+                    pygame.draw.rect(grid.screen, end, pygame.Rect(Ex_indice*30, Ey_indice*30, 30, 30)) # draw rectangle of current block
+                    pygame.display.flip()
 
+            #Probelm is that cant access some blocks
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE and len(start_end)==2:
+                shortest_path= grid.bfs(grid.neighbors_list, start_end[0], start_end[1])
+                if shortest_path != None and start_end[0]!=start_end[1] :  
+                    shortest_path.pop(0)
+                    shortest_path.pop(-1)
+                    for i in shortest_path:
+                        wall_indice[i]=1
+                        for x in grid.neighbors_list[i]:
+                            if i in grid.neighbors_list[x]:
+                                grid.neighbors_list[x].remove(i)
+                    grid.draw_path(shortest_path)
+                    
+                
                 
 
-                    
-            
-            
+
             
 
-
-
     
-    
-    
-
-
-    
-    
-
-    
-
- 
-
-
-
+        FPS_CLOCK.tick(100)
+        pos = pygame.mouse.get_pos() #finds the coords of the current cursor postion
+        x_indice = pos[0]//30 #to find the left coords of current position of current block your in
+        y_indice = pos[1]//30 #to find the top coords of current position of current block your in
+        indice = 20*y_indice + x_indice
+        #if we havent clicked on a button, we're not on a wall indice, and indice is not a start or end indice, highlight
+        if button_ind ==0 and indice not in wall_indice and indice not in start_end: 
+            grid.highlight_box(pos) #calls the method according to current position, highlights the current box
+        
 
 
 main()
