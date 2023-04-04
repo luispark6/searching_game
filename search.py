@@ -164,6 +164,19 @@ class Grid:
             
         #pygame.display.flip()
 
+    def dfs(self, graph, start, goal):
+        stack = [(start, [start])]
+        print(type(stack))
+        visited = set()
+        while stack:
+            (vertex, path) = stack.pop()
+            if vertex not in visited:
+                if vertex == goal:
+                    return path
+                visited.add(vertex)
+                for neighbor in graph[vertex]:
+                    stack.append((neighbor, path + [neighbor]))
+
 
 def main():
     start_end= [] #This tells us the start and end indices
@@ -250,7 +263,7 @@ def main():
                     pygame.display.flip()
 
             #Probelm is that cant access some blocks
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE and len(start_end)==2:
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_b and len(start_end)==2:
                 shortest_path= grid.bfs(grid.neighbors_list, start_end[0], start_end[1])
                 if shortest_path != None and start_end[0]!=start_end[1] :  
                     shortest_path.pop(0)
@@ -261,14 +274,30 @@ def main():
                             if i in grid.neighbors_list[x]:
                                 grid.neighbors_list[x].remove(i)
                     grid.draw_path(shortest_path)
-                    
-                
-                
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_d and len(start_end)==2:
+                path = grid.dfs(grid.neighbors_list, start_end[0], start_end[1])
+                if path != None and start_end[0]!=start_end[1] :  
+                    path.pop(0)
+                    path.pop(-1)
+                    for i in path:
+                        wall_indice[i]=1
+                        for x in grid.neighbors_list[i]:
+                            if i in grid.neighbors_list[x]:
+                                grid.neighbors_list[x].remove(i)
+                    grid.draw_path(path)
 
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_r:
+                start_end= [] #This tells us the start and end indices
+                end= [255, 0, 0]
+                send_ind=0   #this tells me when I should reset the start and end blocks
+                Gindice=0  #this tells me the indice of the start block
+                Eindice = 0  #this tells me the idnice of the end block
+                green = [0,255, 0]
+                wall_indice = {}  #this tells me which block indices are a wall
+                button_ind=0  #this tells us if mouse button is up or down for each event
+                grid = Grid()   
+                grid.setup_blocks()
 
-            
-
-    
         FPS_CLOCK.tick(100)
         pos = pygame.mouse.get_pos() #finds the coords of the current cursor postion
         x_indice = pos[0]//30 #to find the left coords of current position of current block your in
