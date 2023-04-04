@@ -4,6 +4,7 @@ from re import L
 environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
 import pygame
 import time
+import sys
 
 
 class Grid:
@@ -118,7 +119,7 @@ class Grid:
             
         return indice
 
-
+    #breadth first search
     def bfs(self, graph, start, goal):
         # keep track of explored nodes
         explored = []
@@ -163,7 +164,7 @@ class Grid:
             time.sleep(.05)
             
         #pygame.display.flip()
-
+    #depth first search
     def dfs(self, graph, start, goal):
         stack = [(start, [start])]
         print(type(stack))
@@ -194,8 +195,10 @@ def main():
     while running:    #checks each event and see if it should quit
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
-                if (event.key == pygame.K_ESCAPE) or (event.type == pygame.QUIT):
+                if (event.key == pygame.K_ESCAPE):
                     running = False
+            elif (event.type == pygame.QUIT):
+                return
             
             if event.type == pygame.MOUSEBUTTONUP : #if the mouse button has been release, then set button_ind =0
                 button_ind=0
@@ -262,29 +265,29 @@ def main():
                     pygame.draw.rect(grid.screen, end, pygame.Rect(Ex_indice*30, Ey_indice*30, 30, 30)) # draw rectangle of current block
                     pygame.display.flip()
 
-            #Probelm is that cant access some blocks
+            
             if event.type == pygame.KEYDOWN and event.key == pygame.K_b and len(start_end)==2:
-                shortest_path= grid.bfs(grid.neighbors_list, start_end[0], start_end[1])
-                if shortest_path != None and start_end[0]!=start_end[1] :  
-                    shortest_path.pop(0)
-                    shortest_path.pop(-1)
-                    for i in shortest_path:
+                shortest_path= grid.bfs(grid.neighbors_list, start_end[0], start_end[1]) #call bfs based on start and end block
+                if shortest_path != None and start_end[0]!=start_end[1] :  #there must be a path and the start and end block have to be in different indices
+                    shortest_path.pop(0) #dont want to highlight start box
+                    shortest_path.pop(-1) #dont want to highlight end box
+                    for i in shortest_path: #add the path to walls so path act as walls
                         wall_indice[i]=1
                         for x in grid.neighbors_list[i]:
                             if i in grid.neighbors_list[x]:
                                 grid.neighbors_list[x].remove(i)
-                    grid.draw_path(shortest_path)
+                    grid.draw_path(shortest_path) #draws path
             if event.type == pygame.KEYDOWN and event.key == pygame.K_d and len(start_end)==2:
-                path = grid.dfs(grid.neighbors_list, start_end[0], start_end[1])
-                if path != None and start_end[0]!=start_end[1] :  
-                    path.pop(0)
-                    path.pop(-1)
-                    for i in path:
+                path = grid.dfs(grid.neighbors_list, start_end[0], start_end[1]) #call dfs
+                if path != None and start_end[0]!=start_end[1] :  #there must be a path and start and end block must not be in the same indice
+                    path.pop(0) #dont wanna highlight start block
+                    path.pop(-1) #dont wanna highlight end block
+                    for i in path: #add path as a wall
                         wall_indice[i]=1
                         for x in grid.neighbors_list[i]:
                             if i in grid.neighbors_list[x]:
                                 grid.neighbors_list[x].remove(i)
-                    grid.draw_path(path)
+                    grid.draw_path(path) #draw path
 
             if event.type == pygame.KEYDOWN and event.key == pygame.K_r:
                 start_end= [] #This tells us the start and end indices
@@ -307,6 +310,6 @@ def main():
         if button_ind ==0 and indice not in wall_indice and indice not in start_end: 
             grid.highlight_box(pos) #calls the method according to current position, highlights the current box
         
-
+    return
 
 main()
